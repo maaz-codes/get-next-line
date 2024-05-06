@@ -7,7 +7,7 @@
 
 #define BUFFER_SIZE 10
 
-char *fetch_line(char *buff, int chars_read)
+static char *fetch_line(char *buff, int chars_read)
 {
     int i;
     char *line;
@@ -25,7 +25,7 @@ char *fetch_line(char *buff, int chars_read)
     return (line);
 }
 
-int find_next_line2(char *buff, int chars_read)
+static int find_next_line2(char *buff, int chars_read)
 {
     int i;
 
