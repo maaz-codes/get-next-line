@@ -1,13 +1,7 @@
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "get_next_line.h"
+#include <stdio.h>
 
-#define BUFFER_SIZE 10
-
-static char *fetch_line(char *buff, int chars_read)
+static char *fetch_line(char *buff)
 {
     int i;
     char *line;
@@ -25,12 +19,12 @@ static char *fetch_line(char *buff, int chars_read)
     return (line);
 }
 
-static int find_next_line2(char *buff, int chars_read)
+static int find_next_line(char *buff, int chars_read)
 {
     int i;
 
     i = 0;
-    if (chars_read == 0)
+    if (chars_read == 0 || chars_read < BUFFER_SIZE)
         return (1);
     while (buff[i] != '\0')
     {
@@ -44,25 +38,47 @@ static int find_next_line2(char *buff, int chars_read)
 char *get_next_line(int fd)
 {
     static char buff[BUFFER_SIZE + 1u];
+    static int first_time_open = 1;
     char *line;
-    int chars_read;
+    // int chars_read;
     int count;
+    char *updated_buff;
+    static int i = 1;
 
-    chars_read = -1;
+    if (fd < 0 || BUFFER_SIZE <= 0 || BUFFER_SIZE > INT_MAX)
+		return (NULL);
     count = ft_strlen(buff);
-    while (chars_read != 0)
+    int chars_read = BUFFER_SIZE;
+    line = "\0";
+    while (chars_read > 0 && first_time_open)
     {
-        if(find_next_line2(buff, chars_read))
+        if (chars_read == BUFFER_SIZE)
+            first_time_open = 1;
+        else if (chars_read == 0)
+            first_time_open = 0;
+        printf(" - - Loop = %d - - \n", i++);
+        // printf("CHR_RD = %d || Buff = %s \n", chars_read, buff);
+        if(find_next_line(buff, chars_read))
         {
-            line = fetch_line(buff, chars_read);
-            memcpy(buff, ft_strchr(buff, '\n'), strlen(ft_strchr(buff, '\n')) + 1);
+            line = fetch_line(buff);
+            printf("LINE = %s \n", line);
+            updated_buff = ft_strchr(buff, '\n');
+            if (updated_buff == NULL)
+                buff[0] = '\0';
+            else
+                ft_memcpy(buff, updated_buff, ft_strlen(updated_buff) + 1);
             return (line);
         }
         chars_read = read(fd, buff + count, BUFFER_SIZE);
+        if (chars_read == 0 && first_time_open)
+            return (NULL);
+        if (chars_read == -1)
+            return (NULL);
         count += chars_read;
         buff[count] = '\0';
+        printf("NEW CHR_RD = %d || NEW Buff = %s \n", chars_read, buff);
     }
-    return (line);
+    return (NULL);
 }
 
 int main(void)
@@ -70,19 +86,15 @@ int main(void)
     char **lines;
     int i;
     int fd;
+    int num_lines = 6;
 
     i = 0;
     fd = open("read.txt", O_RDONLY);
-    printf("Line 1 = %s \n", get_next_line(fd));
-    printf("Line 2 = %s \n", get_next_line(fd));
-    printf("Line 3 = %s \n", get_next_line(fd));
-    printf("Line 4 = %s \n", get_next_line(fd));
-    printf("Line 5 = %s \n", get_next_line(fd));
-    printf("Line 6 = %s \n", get_next_line(fd));
-    // while (i < 1)
-    // {
-    //     lines[i] = get_next_line(fd);
-    //     printf("Line %d = %s\n", (i + 1), lines[i]);
-    //     i++;
-    // }
+    lines = malloc(sizeof(char *) * num_lines);
+    while (i < num_lines)
+    {
+        lines[i] = get_next_line(fd);
+        printf("Line %d = %s\n", (i + 1), lines[i]);
+        i++;
+    }
 }
