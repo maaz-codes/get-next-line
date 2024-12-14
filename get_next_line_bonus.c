@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: maakhan <maakhan@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/07/07 23:22:14 by maakhan           #+#    #+#             */
-/*   Updated: 2024/07/13 21:20:13 by maakhan          ###   ########.fr       */
+/*   Created: 2024/07/13 20:39:18 by maakhan           #+#    #+#             */
+/*   Updated: 2024/07/13 21:28:50 by maakhan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 static char	*ft_free(char *str, char *buff)
 {
@@ -98,20 +98,20 @@ static char	*update(char *str)
 char	*get_next_line(int fd)
 {
 	char		*buff;
-	static char	*str;
+	static char	*str[1024];
 	char		*line;
 	int			chars_read;
 
 	chars_read = 1;
-	if (fd < 0 || BUFFER_SIZE <= 0 || BUFFER_SIZE > INT_MAX)
+	if (fd < 0 || fd > 1024 || BUFFER_SIZE <= 0 || BUFFER_SIZE > INT_MAX)
 		return (NULL);
 	buff = malloc(BUFFER_SIZE + 1);
 	if (!buff)
 		return (NULL);
-	str = reader(fd, buff, str, chars_read);
-	if (!str)
+	str[fd] = reader(fd, buff, str[fd], chars_read);
+	if (!str[fd])
 		return (NULL);
-	line = fetch_line(str);
-	str = update(str);
+	line = fetch_line(str[fd]);
+	str[fd] = update(str[fd]);
 	return (line);
 }
